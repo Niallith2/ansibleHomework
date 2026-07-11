@@ -1,0 +1,20 @@
+---
+- name: "Download minikube"
+  shell: "curl -L https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 -o minikube"
+
+- name: "Make executable"
+  shell: "chmod +x minikube"
+
+- name: "Copy to path"
+  shell: "sudo mv minikube /usr/local/bin/"
+
+- name: "Get minikube version"
+  shell: "minikube version"
+  register: minikube_version
+
+- name: "Check version"
+  debug:
+    msg: "{{ minikube_version }}"
+
+- name: "Start minikube"
+  shell: "minikube start --driver=docker --force"

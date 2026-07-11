@@ -1,0 +1,9 @@
+---
+- name: "Download kubectl"
+  shell: "curl -LO https://dl.k8s.io/v1.36.2/bin/linux/amd64/kubectl"
+
+- name: "Make executable"
+  shell: "chmod +x kubectl"
+
+- name: "Copy to path"
+  shell: "sudo mv kubectl /usr/local/bin/"

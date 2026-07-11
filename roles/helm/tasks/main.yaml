@@ -1,0 +1,19 @@
+---
+- name: "Download helm"
+  shell: "curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3"
+
+- name: "Make executable"
+  shell: "chmod 700 get_helm.sh"
+
+- name: "Install helm"
+  shell: "./get_helm.sh"
+
+- name: "Add chart repo"
+  shell: "helm repo add stable https://charts.helm.sh/stable"
+
+- name: "Update repo"
+  shell: "helm repo update"
+
+
+
+

@@ -1,0 +1,11 @@
+- name: "Install"
+  hosts: server
+  user: user
+  become: true
+  roles:
+    - common
+    - helm
+    - geerlingguy.docker #Взял готовый) Было лень писать
+    - kubectl
+    - minikube
+    - moon

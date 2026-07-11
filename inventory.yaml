@@ -1,0 +1,4 @@
+server:
+  hosts:
+    192.168.1.42:
+      ansible_become_exe: sudo -S -p 'sudo password:'

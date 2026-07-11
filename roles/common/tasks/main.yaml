@@ -1,0 +1,8 @@
+---
+- name: "Install additional packages"
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - curl
+    - gpg
