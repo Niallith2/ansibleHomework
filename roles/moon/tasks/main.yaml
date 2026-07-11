@@ -1,37 +1,29 @@
 ---
 - name: "Enable ingress"
   shell: "minikube addons enable ingress"
+  become: yes
 
 - name: "Create Moon namespace"
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: Namespace
-    name: Moon
-    state: present
+  shell: "kubectl create namespace moon --dry-run=client -o yaml | kubectl apply -f -"
+  register: namespace_result
+  changed_when: "'created' in namespace_result.stdout"
 
 - name: "Add helm repo"
-  kubernetes.core.helm_repository:
-    name: aerokube
-    repo_url: https://charts.aerokube.com
+  shell: "helm repo add aerokube https://charts.aerokube.com"
+  register: repo_result
+  changed_when: "'has been added' in repo_result.stdout"
 
-- name: Deploy moon
-  kubernetes.core.helm:
-    name: moon
-    chart_ref: aerokube/moon2
-    release_namespace: moon
-    wait: true
-    create_namespace: false
-    values:
-      ingress:
-        host: moon.aerokube.local
+- name: "Update helm repos"
+  shell: "helm repo update"
 
-- name: Deploy moon
-  kubernetes.core.helm:
-    name: moon
-    chart_ref: aerokube/moon2
-    release_namespace: moon
-    wait: true
-    create_namespace: false
-    values:
-      ui:
-        enabled: true
+- name: "Deploy moon"
+  shell: |
+    helm upgrade --install moon aerokube/moon2 \
+      --namespace moon \
+      --create-namespace \
+      --set ingress.host=moon.aerokube.local \
+      --set ui.enabled=true \
+      --wait
+
+- name: "Set hosts"
+  shell: "echo '192.168.49.2 moon.aerokube.local' | sudo tee -a /etc/hosts"
