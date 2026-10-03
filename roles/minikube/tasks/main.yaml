@@ -16,5 +16,19 @@
   debug:
     msg: "{{ minikube_version }}"
 
+- name: "Purge"
+  shell: "minikube delete --all --purge"
+
 - name: "Start minikube"
-  shell: "minikube start --driver=docker --force"
+  shell: "minikube start --cpus=4 --memory=8192 --driver=docker --force --force-systemd=true"
+
+- name: "Get minikube status"
+  shell: "minikube status"
+  register: minikube_status
+
+- name: "Check minikube status"
+  debug:
+    msg: "{{ minikube_status }}"
+
+- name: "minikube enable regestry"
+  shell: "minikube addons enable registry"

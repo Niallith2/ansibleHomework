@@ -4,7 +4,7 @@
   become: yes
 
 - name: "Create Moon namespace"
-  shell: "kubectl create namespace moon --dry-run=client -o yaml | kubectl apply -f -"
+  shell: "sudo kubectl create namespace moon --dry-run=client -o yaml | kubectl apply -f -"
   register: namespace_result
   changed_when: "'created' in namespace_result.stdout"
 
@@ -16,6 +16,14 @@
 - name: "Update helm repos"
   shell: "helm repo update"
 
+- name: "Wait for ingress-nginx controller to be ready"
+  ansible.builtin.shell: >
+    kubectl wait --namespace ingress-nginx
+    --for=condition=ready pod
+    --selector=app.kubernetes.io/component=controller
+    --timeout=300s
+  changed_when: false
+
 - name: "Deploy moon"
   shell: |
     helm upgrade --install moon aerokube/moon2 \
@@ -25,5 +33,10 @@
       --set ui.enabled=true \
       --wait
 
+- name: "Get Minikube IP"
+  ansible.builtin.shell: "minikube ip"
+  register: minikube_ip
+  changed_when: false
+
 - name: "Set hosts"
-  shell: "echo '192.168.49.2 moon.aerokube.local' | sudo tee -a /etc/hosts"
+  shell: "echo '{{ minikube_ip.stdout }} moon.aerokube.local' | sudo tee -a /etc/hosts"

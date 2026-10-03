@@ -6,3 +6,13 @@
   loop:
     - curl
     - gpg
+    - nginx
+    - util-linux-extra
+
+- name: Install pre-requisites via apt
+  apt:
+    name:
+      - python3-openshift
+      - python3-yaml
+      - python3-kubernetes
+    state: present

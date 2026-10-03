@@ -1,0 +1,70 @@
+---
+- name: "create namespace jenkins"
+  kubernetes.core.k8s:
+    name: jenkins
+    kind: Namespace
+    state: present
+
+- name: "add helm repo jenkins"
+  kubernetes.core.helm_repository:
+    name: jenkins
+    repo_url: "https://charts.jenkins.io/"
+
+- name: "Install jenkins"
+  kubernetes.core.helm:
+    name: jenkins
+    chart_ref: jenkins/jenkins
+    release_namespace: jenkins
+    wait: true
+    values:
+      controller:
+        javaOpts: "-Djenkins.install.runSetupWizard=false"
+        username: "admin"
+        password: "admin"
+        serviceType: LoadBalancer
+        servicePort: 8080
+        jenkinsUrl: "http://localhost:8080"
+        additionalPlugins:
+          - pipeline-stage-view:2.41
+          - pipeline-utility-steps:3.810.va_7672d206740
+          - matrix-project:928.v1effc3f3a_236
+          - allure-jenkins-plugin:2.35.2
+          - junit:1431.vc0d98912a_756
+          - copyartifact:805.v9d1393350780
+          - http_request:1.659.v1b_9d9e942a_e6
+          - build-user-vars-plugin:214.va_eed2ed849ca_
+          - timestamper:1.30
+
+- name: "Get jenkins admin password"
+  ansible.builtin.shell: "jenkins"
+
+  register: jenkins_pass
+  changed_when: false
+
+- name: "Show jenkins admin password"
+  ansible.builtin.debug:
+    msg: "Jenkins admin password: {{ jenkins_pass.stdout }}"
+
+- name: "Get Jenkins NodePort"
+  ansible.builtin.shell: >
+    kubectl get svc jenkins -n jenkins
+    -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}'
+  register: jenkins_nodeport
+  changed_when: false
+
+- name: "Get Minikube IP"
+  ansible.builtin.shell: "minikube ip"
+  register: minikube_ip
+  changed_when: false
+
+- name: "Deploy nginx config for Jenkins"
+  ansible.builtin.template:
+    src: templates/jenkins.conf.j2
+    dest: /etc/nginx/conf.d/jenkins.conf
+    owner: root
+    group: root
+    mode: "0644"
+    force: true
+
+- name: "Reload ngnix"
+  shell: "sudo systemctl reload nginx"
